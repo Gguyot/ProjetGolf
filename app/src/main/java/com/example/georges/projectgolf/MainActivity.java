@@ -36,7 +36,7 @@ public class MainActivity extends Activity {
         textView.setText("Touché et déplacé votre doigt sur l'écran.");
         setContentView(textView);
 
-
+        //Récupère les éléments et les stocks dans une arraylist( id <= bientot remplacé par time, posX,posY)
         textView.setOnHoverListener(new View.OnHoverListener() {
             public boolean onHover(View view, MotionEvent motionEvent) {
                 if (stop==false)
@@ -54,8 +54,7 @@ public class MainActivity extends Activity {
                 return false;
             }
         });
-
-
+        //le clic de souris arrete l'enregistrement des évènements dans l'arraylist et renvoie son contenu
         textView.setOnTouchListener(new View.OnTouchListener()
         {
             public boolean onTouch(View v, MotionEvent event)
