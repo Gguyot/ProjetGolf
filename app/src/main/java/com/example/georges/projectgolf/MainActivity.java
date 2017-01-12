@@ -49,6 +49,7 @@ public class MainActivity extends Activity {
                     list.add(event);
                     String position = motionEvent.getX() + "  " + motionEvent.getY();
                     textView.setText(position);
+                    Log.e("testgit","test");
                 }
                 return false;
             }
