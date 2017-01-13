@@ -9,24 +9,29 @@ import java.util.Date;
  */
 
 public class EventMoveMouse {
-    double mouseX,mouseY;
+    float mouseX,mouseY;
     long eventId;
+    String eventDate;
 
-    public EventMoveMouse(long eventDate, double mouseX, double mouseY) {
-        this.eventId = eventDate;
+
+
+    public EventMoveMouse(int mouseX, int mouseY, long eventId, String eventDate) {
         this.mouseX = mouseX;
         this.mouseY = mouseY;
+        this.eventId = eventId;
+        this.eventDate = eventDate;
     }
+
     public EventMoveMouse() {
 
     }
 
 
-    public void setMouseX(double mouseX) {
+    public void setMouseX(float mouseX) {
         this.mouseX = mouseX;
     }
 
-    public void setMouseY(double mouseY) {
+    public void setMouseY(float mouseY) {
         this.mouseY = mouseY;
     }
 
@@ -34,16 +39,32 @@ public class EventMoveMouse {
         this.eventId = eventDate;
     }
 
-    public double getMouseX() {
+    public float getMouseX() {
         return mouseX;
     }
 
-    public double getMouseY() {
+    public float getMouseY() {
         return mouseY;
     }
 
     public long getEventLong() {
         return eventId;
+    }
+
+    public long getEventId() {
+        return eventId;
+    }
+
+    public void setEventId(long eventId) {
+        this.eventId = eventId;
+    }
+
+    public String getEventDate() {
+        return eventDate;
+    }
+
+    public void setEventDate(String eventDate) {
+        this.eventDate = eventDate;
     }
 
 }
