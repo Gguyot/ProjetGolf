@@ -32,12 +32,12 @@ public class MainActivity extends Activity {
     TextView textView;
     long compt=0;
     boolean stop =false;
-    ArrayList list=new ArrayList();
-
+    //instanciation de la liste des coordonnées
+    ArrayList<EventMoveMouse> list=new ArrayList<EventMoveMouse>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        //Affichage des coordonnées courant du curseur de la souris dans un libellé
         textView = new TextView(this);
         textView.setText("Touché et déplacé votre doigt sur l'écran.");
         setContentView(textView);
@@ -50,7 +50,9 @@ public class MainActivity extends Activity {
                 {
 
                     EventMoveMouse event=new EventMoveMouse();
+                    //Permet de créer un identifiant unique pour chaque objet
                     compt++;
+                    //Enregistrement sur l'objet courant id,posX,posY,timer
                     event.setMouseX(motionEvent.getX());
                     event.setMouseY(motionEvent.getY());
                     event.setEventlong(compt);
@@ -61,15 +63,18 @@ public class MainActivity extends Activity {
 
                     event.setEventDate(formater.format(date));
 
-
+                    //Ajout de l'objet dans la liste
                     list.add(event);
+                    //Mise à jour de l'affichage de la position du curseur
                     String position = motionEvent.getX() + "  " + motionEvent.getY();
                     textView.setText(position);
                 }
                 return false;
             }
         });
-        //le clic de souris arrete l'enregistrement des évènements dans l'arraylist et renvoie son contenu
+        //le clic de souris arrete l'enregistrement des évènements dans l'arraylist et renvoie son contenu dans la console
+        //Affiche une nouvelle interface avec un graph
+        // ATTENTION LES COORDONNEES DES X DOIVENT ETRE CROISSANT
         textView.setOnTouchListener(new View.OnTouchListener()
         {
             public boolean onTouch(View v, MotionEvent event)
@@ -84,6 +89,7 @@ public class MainActivity extends Activity {
                 switch (action) {
                     case MotionEvent.ACTION_DOWN:
                         EventMoveMouse recupEvent=new EventMoveMouse();
+                        //Affichage sur la console les coordonnées enregistrées
                         synchronized(list) {
                             Iterator i = list.iterator(); // Must be in synchronized block
                             while (i.hasNext()) {
@@ -94,15 +100,11 @@ public class MainActivity extends Activity {
                         toast.show();
 
                 }
+                //Appel à l'interface possèdant le graph à afficher avec comme paramètre la liste des coordonnées
+                Intent objIndent = new Intent(MainActivity.this,graphMousePos.class);
+                objIndent.putExtra("Array_pos",list);
+                startActivity(objIndent);
 
-
-                /*
-                for(int i =0;i<list.size();i++)
-                {
-                    EventMoveMouse recupEvent=new EventMoveMouse();
-                    recupEvent=(EventMoveMouse)list.get(i);
-                    Log.e("VALEUR ",recupEvent.getEventLong()+"         "+recupEvent.getMouseX()+"       "+recupEvent.getMouseY());
-                }*/
 
                 return true;
             }

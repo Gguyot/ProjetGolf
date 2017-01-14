@@ -2,13 +2,14 @@ package com.example.georges.projectgolf;
 
 import android.util.Log;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by Georges on 12/01/2017.
  */
 
-public class EventMoveMouse {
+public class EventMoveMouse  implements Serializable{
     float mouseX,mouseY;
     long eventId;
     String eventDate;
