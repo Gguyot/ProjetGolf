@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
     private final static int REQUEST_CODE_ENABLE_BLUETOOTH = 0;
     TextView textView;
     long compt=0;
+    float min=0;
     boolean stop =false;
     //instanciation de la liste des coordonnées
     ArrayList<EventMoveMouse> list=new ArrayList<EventMoveMouse>();
@@ -62,9 +63,12 @@ public class MainActivity extends Activity {
                     java.util.Date date = new java.util.Date();
 
                     event.setEventDate(formater.format(date));
-
-                    //Ajout de l'objet dans la liste
-                    list.add(event);
+                    // CODE TEMPORAIRE AFIN D'ÉVITER L'ERREUR DU RETOUR EN ARRIERE
+                    if(min<motionEvent.getX()) {
+                        //Ajout de l'objet dans la liste
+                        list.add(event);
+                        min=motionEvent.getX();
+                    }
                     //Mise à jour de l'affichage de la position du curseur
                     String position = motionEvent.getX() + "  " + motionEvent.getY();
                     textView.setText(position);

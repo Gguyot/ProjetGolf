@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -17,7 +20,7 @@ import java.util.Iterator;
  * Created by Georges on 14/01/2017.
  */
 // Classe permettant d'afficher le graphe  (abscisse posXcurseur    ||  ordonnée  posYcurseur)
-public class graphMousePos  extends Activity {
+public class graphMousePos extends Activity {
     LineGraphSeries<DataPoint> series;
     EventMoveMouse recupEvent=new EventMoveMouse();
     protected void onCreate(Bundle savedInstaceState)
@@ -44,6 +47,22 @@ public class graphMousePos  extends Activity {
             }
         }
         graph.addSeries(series);
+
+
+
+
+        graph.setOnTouchListener(new View.OnTouchListener()
+        {
+            public boolean onTouch(View v, MotionEvent event)
+            {
+
+                //Appel à l'interface possèdant le graph à afficher avec comme paramètre la liste des coordonnées
+                Intent objIndent = new Intent(graphMousePos.this,MapGoogleGolf.class);
+                startActivity(objIndent);
+
+                return true;
+            }
+        });
     }
 }
 
