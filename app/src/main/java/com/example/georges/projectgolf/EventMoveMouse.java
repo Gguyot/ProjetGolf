@@ -3,20 +3,21 @@ package com.example.georges.projectgolf;
 import android.util.Log;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Date;
 
 /**
  * Created by Georges on 12/01/2017.
  */
 
-public class EventMoveMouse  implements Serializable{
+public class EventMoveMouse  implements Serializable, Comparable<EventMoveMouse>{
     float mouseX,mouseY;
     long eventId;
-    String eventDate;
+    double eventDate;
 
 
 
-    public EventMoveMouse(int mouseX, int mouseY, long eventId, String eventDate) {
+    public EventMoveMouse(int mouseX, int mouseY, long eventId, double eventDate) {
         this.mouseX = mouseX;
         this.mouseY = mouseY;
         this.eventId = eventId;
@@ -60,12 +61,23 @@ public class EventMoveMouse  implements Serializable{
         this.eventId = eventId;
     }
 
-    public String getEventDate() {
+    public double getEventDate() {
         return eventDate;
     }
 
-    public void setEventDate(String eventDate) {
+    public void setEventDate(double eventDate) {
         this.eventDate = eventDate;
     }
 
+
+    @Override
+    public int compareTo(EventMoveMouse objetC) {
+        if (objetC.getMouseX()<this.mouseX)
+        {
+            return 1;
+        }else
+        {
+            return -1;
+        }
+    }
 }

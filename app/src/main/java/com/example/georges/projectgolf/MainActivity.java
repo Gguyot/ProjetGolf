@@ -18,6 +18,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
@@ -35,6 +37,7 @@ public class MainActivity extends Activity {
     boolean stop =false;
     //instanciation de la liste des coordonnées
     ArrayList<EventMoveMouse> list=new ArrayList<EventMoveMouse>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,39 +46,7 @@ public class MainActivity extends Activity {
         textView.setText("Touché et déplacé votre doigt sur l'écran.");
         setContentView(textView);
 
-        //Récupère les éléments et les stocks dans une arraylist( id <= bientot remplacé
-        // par time, posX,posY)
-        textView.setOnHoverListener(new View.OnHoverListener() {
-            public boolean onHover(View view, MotionEvent motionEvent) {
-                if (stop==false)
-                {
 
-                    EventMoveMouse event=new EventMoveMouse();
-                    //Permet de créer un identifiant unique pour chaque objet
-                    compt++;
-                    //Enregistrement sur l'objet courant id,posX,posY,timer
-                    event.setMouseX(motionEvent.getX());
-                    event.setMouseY(motionEvent.getY());
-                    event.setEventlong(compt);
-
-                    String format = "H:mm:ss:ms";
-                    java.text.SimpleDateFormat formater = new java.text.SimpleDateFormat( format );
-                    java.util.Date date = new java.util.Date();
-
-                    event.setEventDate(formater.format(date));
-                    // CODE TEMPORAIRE AFIN D'ÉVITER L'ERREUR DU RETOUR EN ARRIERE
-                    if(min<motionEvent.getX()) {
-                        //Ajout de l'objet dans la liste
-                        list.add(event);
-                        min=motionEvent.getX();
-                    }
-                    //Mise à jour de l'affichage de la position du curseur
-                    String position = motionEvent.getX() + "  " + motionEvent.getY();
-                    textView.setText(position);
-                }
-                return false;
-            }
-        });
         //le clic de souris arrete l'enregistrement des évènements dans l'arraylist et renvoie son contenu dans la console
         //Affiche une nouvelle interface avec un graph
         // ATTENTION LES COORDONNEES DES X DOIVENT ETRE CROISSANT
@@ -83,16 +54,10 @@ public class MainActivity extends Activity {
         {
             public boolean onTouch(View v, MotionEvent event)
             {
-                Toast toast = Toast.makeText(
-                        getApplicationContext(),
-                        "View touched",
-                        Toast.LENGTH_LONG
-                );
-                stop=true;
                 final int action = event.getAction();
                 switch (action) {
-                    case MotionEvent.ACTION_DOWN:
-                        EventMoveMouse recupEvent=new EventMoveMouse();
+                    case MotionEvent.ACTION_UP:
+                              EventMoveMouse recupEvent=new EventMoveMouse();
                         //Affichage sur la console les coordonnées enregistrées
                         synchronized(list) {
                             Iterator i = list.iterator(); // Must be in synchronized block
@@ -101,15 +66,46 @@ public class MainActivity extends Activity {
                                 Log.e("VALEUR ", recupEvent.getEventLong() + "         posX = " + recupEvent.getMouseX() + "       posY = " + recupEvent.getMouseY()+"                       "+recupEvent.getEventDate());
                             }
                         }
-                        toast.show();
+                        Log.e("ACTION_UP"," je suis le test");
 
+                        //Appel à l'interface possèdant le graph à afficher avec comme paramètre la liste des coordonnées
+                        Intent objIndent = new Intent(MainActivity.this,graphMousePos.class);
+                       // Collections.sort(list, null);
+                        objIndent.putExtra("Array_pos",list);
+
+                        startActivity(objIndent);
+
+                    case MotionEvent.ACTION_MOVE:
+                        EventMoveMouse eventObject=new EventMoveMouse();
+                        //Permet de créer un identifiant unique pour chaque objet
+                        compt++;
+
+                        //Enregistrement sur l'objet courant id,posX,posY,timer
+                        eventObject.setMouseX(event.getX());
+                        eventObject.setMouseY(event.getY());
+                        eventObject.setEventlong(compt);
+
+                        double start_time = System.currentTimeMillis();
+                        eventObject.setEventDate(start_time);
+                        //--------------------------------------------------------------------------------------------
+                        /*
+                        String format = "H:mm:ss:ms";
+                        java.text.SimpleDateFormat formater = new java.text.SimpleDateFormat( format );
+                        java.util.Date date = new java.util.Date();
+
+                        eventObject.setEventDate(formater.format(date));
+                        //---------------------------------------------------------------------------------------------
+                        // CODE TEMPORAIRE AFIN D'ÉVITER L'ERREUR DU RETOUR EN ARRIERE
+                        /*if(min<v.getX()) {
+                            //Ajout de l'objet dans la liste
+
+                            min=v.getX();
+                        }*/
+                        list.add(eventObject);
+                        //Mise à jour de l'affichage de la position du curseur
+                        String position = event.getX() + "  " + event.getY();
+                        textView.setText(position);
                 }
-                //Appel à l'interface possèdant le graph à afficher avec comme paramètre la liste des coordonnées
-                Intent objIndent = new Intent(MainActivity.this,graphMousePos.class);
-                objIndent.putExtra("Array_pos",list);
-                startActivity(objIndent);
-
-
                 return true;
             }
         });
