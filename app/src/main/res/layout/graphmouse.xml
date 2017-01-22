@@ -23,4 +23,10 @@
         android:layout_height="wrap_content"
         android:id="@+id/tvAvgSpeed"
         tools:text="VitesseMoyenne" />
+
+    <TextView
+        android:text="DistanceParcouru"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvDistance" />
 </LinearLayout>

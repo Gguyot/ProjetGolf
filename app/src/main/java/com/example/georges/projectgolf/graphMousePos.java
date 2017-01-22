@@ -115,13 +115,32 @@ public class graphMousePos extends Activity {
             //Log.e("DISTANCE A=>B",previousEvent.getEventId()+" ===> "+currentEvent.getEventId()+"        Val   "+calDistance);   Affichage de la distance entre deux point à la suite dans la liste
             //Log.i("Val Boucle(t-1)(t)","previous  : "+previousEvent.getEventId()+"       current  : "+currentEvent.getEventId());       Affichage  des objets vérification
         }
+
+
+        String message="";
         //calcul de la vitesse moyenne en m/s
         avgSpeed=sumSpeed/(list.size()-1);
+        message = "Moyenne de la vitesse  \n:"+avgSpeed+"   m/s";
+
+        //Calcul de la distance qu'aura parcouru la balle
+        //Source
+        //Simulateur
+        //https://www.edumedia-sciences.com/fr/media/660-chute-libre-parabolique
+        //Calcul
+        //http://www.reviz.fr/terminale/physique/applications-lois-dynamique/mouvement-parabolique-chute-libre.html
+        double distanceball=0;
+        distanceball=(Math.pow(avgSpeed,2.0)*Math.sin(2*45)/9.81);
+        TextView resultDistance =(TextView)findViewById(R.id.tvDistance);
+        resultDistance.setText("Distance parcouru   : "+distanceball+" m");
+
         //conversion m/s en km/h
         avgSpeed*=3.6;
+        message+="    ||    "+avgSpeed+"  km/h";
         //Affichage
         TextView resultSpeed=(TextView)findViewById(R.id.tvAvgSpeed);
-        resultSpeed.setText("Moyenne de la vitesse  :"+avgSpeed+"   km/h");
+        resultSpeed.setText(message);
+
+
         //------------------------------------------------------------------------------------------
         graph.setOnTouchListener(new View.OnTouchListener()
         {
