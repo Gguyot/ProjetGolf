@@ -38,6 +38,7 @@
         <activity android:name=".graphMousePos" />
         <activity android:name=".MapGoogleGolf" />
 
+
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -48,7 +49,7 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBdMySkz_Mqn497BcMjoW1I6gz_MZPWQ7o" />
+            android:value="AIzaSyB2Zj1kNY1NAF3fOwvPAjH65DYBG9XGQiE" />
     </application>
 
 </manifest>

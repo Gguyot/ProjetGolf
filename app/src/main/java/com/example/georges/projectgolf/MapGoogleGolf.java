@@ -3,11 +3,15 @@ package com.example.georges.projectgolf;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -15,6 +19,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -28,10 +33,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
 
-    private GoogleMap mMap;
+
     protected GoogleApiClient mGoogleApiClient;
-    Location mLastLocation;
+    //Location locationTemp;
     double lat = 0, lng = 0;
+    String provider;
+    LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,27 +67,57 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+
+        // Enabling MyLocation Layer of Google Map
         map.setMyLocationEnabled(true);
+
+        // Getting LocationManager object from System Service LOCATION_SERVICE
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        // Creating a criteria object to retrieve provider
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+        // Getting the name of the best provider
+        String provider = locationManager.getBestProvider(criteria, true);
+
+        // Getting Current Location
+        Location locationTemp = locationManager.getLastKnownLocation(provider);
+
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        if (locationTemp != null && locationTemp.getAccuracy() >= 100) {
+            Log.e("LOCALISATION", "POS GOOGLE LATITUDE : " + locationTemp.getLatitude() + "POS THOERIQUE : " + 50.166689 + " ||     POS GOOGLE LONGETITUDE : " + locationTemp.getLongitude() + "  POS THEORIQUE : " + 3.159122000000025 + "    ||||||||      " + locationTemp.getAccuracy());
+            LatLng loc = new LatLng(locationTemp.getLatitude(), locationTemp.getLongitude());
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 16.0f));
+            map.addMarker(new MarkerOptions()
+                    .position(new LatLng(loc.latitude, loc.longitude))
+                    .title("Vous êtes ici"));
+
+        }
 
     }
 
 
     @Override
     public void onLocationChanged(Location location) {
-        mMap.clear();
-
-        MarkerOptions mp = new MarkerOptions();
-
-        mp.position(new LatLng(location.getLatitude(), location.getLongitude()));
-
-        mp.title("my position");
-
-        mMap.addMarker(mp);
-
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(location.getLatitude(), location.getLongitude()), 16));
 
 
+    // Getting Current Location
+        if(location.getAccuracy()<100)
+        {
+            LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
+           /* CameraPosition camera=new CameraPosition.Builder()
+                    .target(loc)
+                    .zoom(17)
+                    .build();
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera));
+
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(loc.latitude, loc.longitude))
+                    .title("Vous êtes ici"));*/
+
+        }
+    Log.e("PositionChange",location.getLatitude()+"     "+location.getLongitude()+"       "+location.getAccuracy());
     }
 
 

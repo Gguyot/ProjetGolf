@@ -119,7 +119,7 @@ public class graphMousePos extends Activity {
 
         String message="";
         //calcul de la vitesse moyenne en m/s
-        avgSpeed=sumSpeed/(list.size()-1);
+        avgSpeed=(sumSpeed/(list.size()-1))*iobjet.getIntExtra("power",0);
         message = "Moyenne de la vitesse  \n:"+avgSpeed+"   m/s";
 
         //Calcul de la distance qu'aura parcouru la balle
