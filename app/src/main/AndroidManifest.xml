@@ -36,8 +36,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".graphMousePos" />
-        <activity android:name=".MapGoogleGolf" />
-
+        <activity android:name=".MapGoogleGolf"/>
 
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
