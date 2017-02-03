@@ -1,38 +1,23 @@
 package com.example.georges.projectgolf;
 
 import android.app.Activity;
-import android.app.Instrumentation;
-import android.bluetooth.BluetoothAdapter;
+
 import android.content.Intent;
 import android.graphics.Color;
-import android.icu.text.DateFormat;
-import android.icu.text.SimpleDateFormat;
-import android.icu.util.Calendar;
-import android.media.Image;
-import android.os.SystemClock;
-import android.support.v7.app.AppCompatActivity;
+
 import android.os.Bundle;
-import android.text.format.Time;
+
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Locale;
 
-import static android.R.attr.absListViewStyle;
-import static android.R.attr.text;
-import static android.R.attr.width;
+import java.util.Iterator;
 
 // implements View.OnTouchListener
 public class MainActivity extends Activity {
@@ -42,9 +27,6 @@ public class MainActivity extends Activity {
     boolean stop =false;
     //instanciation de la liste des coordonnées
     ArrayList<EventMoveMouse> list=new ArrayList<EventMoveMouse>();
-
-
-
 
     int powerShoot=30;
 
@@ -82,6 +64,12 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
+
+        //lancement du service gps
+       // Intent servIntent = new Intent(this, ServiceGPS.class);
+        //startService(servIntent);
+
+
 
         //le clic de souris arrete l'enregistrement des évènements dans l'arraylist et renvoie son contenu dans la console
         //Affiche une nouvelle interface avec un graph
