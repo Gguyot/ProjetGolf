@@ -106,10 +106,7 @@ public class graphMousePos extends Activity {
            1 px = 0.000265 m
 
            https://www.ilemaths.net/sujet-comment-passer-de-m-s-en-km-h-37126.html
-           m/s * 3.6 = km/h
-             */
-
-
+           m/s * 3.6 = km/h            */
 
             //Log d'affichage de différent paramètre
             //Log.e("DISTANCE A=>B",previousEvent.getEventId()+" ===> "+currentEvent.getEventId()+"        Val   "+calDistance);   Affichage de la distance entre deux point à la suite dans la liste

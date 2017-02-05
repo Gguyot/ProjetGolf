@@ -17,7 +17,6 @@ public class MyApplication extends Application {
     public boolean getlocationGPS() {
         return locationGPS;
     }
-
     public void setlocationGPS(boolean location) {
         this.locationGPS = location;
     }

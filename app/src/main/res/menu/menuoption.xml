@@ -2,4 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/tpBall"
         android:title="Téléporter"/>
+    <item android:id="@+id/shootBall"
+        android:title="faire un autre tir"/>
 </menu>

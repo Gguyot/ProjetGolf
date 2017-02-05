@@ -29,6 +29,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 
 /**
  * Created by Georges on 16/01/2017.
@@ -42,9 +45,16 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
     double lat = 0, lng = 0;
     String provider;
     LocationManager locationManager;
-    LatLng latLngBall;
+    LatLng latLngBall,latLngHole;
     GoogleMap mMap;
+    boolean shootDone=false;
+    boolean holeCreated=false;
 
+    // L'identifiant de notre requête
+    public final static int Ball_distance =0;
+    // L'identifiant de la chaîne de caractères qui contient le résultat de l'intent
+    public final static String distance = "MapCall";
+    public final static String direction = "MapCallV2";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,7 +91,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
         map.setMyLocationEnabled(true);
 
 
-        if ((((MyApplication) this.getApplication()).getlocationGPS())==true) {
+
             // Getting LocationManager object from System Service LOCATION_SERVICE
             locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -97,33 +107,47 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
 
 
-            Log.e("LOCALISATION", "POS GOOGLE LATITUDE : " + locationTemp.getLatitude() + "POS THOERIQUE : " + 50.166689 + " ||     POS GOOGLE LONGETITUDE : " + locationTemp.getLongitude() + "  POS THEORIQUE : " + 3.159122000000025 + "    ||||||||      " + locationTemp.getAccuracy());
+            Log.e("MapGoogleGolf", "POS GOOGLE LATITUDE : " + locationTemp.getLatitude() + "POS THOERIQUE : " + 50.166689 + " ||     POS GOOGLE LONGETITUDE : " + locationTemp.getLongitude() + "  POS THEORIQUE : " + 3.159122000000025 + "    ||||||||      " + locationTemp.getAccuracy());
 
-            if (locationTemp != null && locationTemp.getAccuracy() >= 100) {
-                LatLng loc = new LatLng(locationTemp.getLatitude(), locationTemp.getLongitude());
-                CameraPosition camera = new CameraPosition.Builder()
-                        .target(loc)
-                        .zoom(17)
-                        .build();
-            }
+
+
         }
 
-    }
+
 
     @Override
     public void onLocationChanged(Location location) {
 
         // Getting Current Location
-        if (location.getAccuracy() < 100) {
+        if (location.getAccuracy() < 100 && shootDone==false) {
             LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
             CameraPosition camera = new CameraPosition.Builder()
                     .target(loc)
                     .zoom(16)
                     .build();
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera));
-            latLngBall = ballPosition(location);
+            latLngBall = ballPosition(location,120.0,90.0);
+            shootDone=true;
+
+            if(holeCreated==false)
+            {
+                Random rand = new Random();
+                double randomDirection = rand.nextInt(360 - 0 + 1) + 0;
+                double randomDistance = rand.nextInt(900 - 200 + 1) + 200;
+                LatLng holePosition=ballPosition(location,randomDistance,randomDirection);
+                mMap.addMarker(new MarkerOptions()
+                        .position(holePosition)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                latLngHole=holePosition;
+
+                holeCreated=true;
+            }
+
         }
-        Log.e("PositionChange", location.getLatitude() + "     " + location.getLongitude() + "       " + location.getAccuracy());
+        Log.e("MapGoogleGolf","PositionChange  "+ location.getLatitude() + "     " + location.getLongitude() + "       " + location.getAccuracy());
+        Log.e("MapGoogleGolf","latLngBall  "+ latLngBall.latitude + "     " + latLngBall.longitude);
+
+
     }
 
 
@@ -140,13 +164,14 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
         - Site permettant de vérifier les test
             # http://www.geomidpoint.com/destination/
     */
-    public LatLng ballPosition(Location Location) {
+    public LatLng ballPosition(Location location,Double distance,Double direction) {
+        Log.e("MapGoogleGolf", "DIRECTION FONCTION   : " + direction );
         double R = 6378.1;  // Rayon de la terre
-        double brng = Math.toRadians(45); // Direction
-        double d = 120 * 0.001; // Distance en m
+        double brng = Math.toRadians(Math.round(direction)); // Direction
+        double d = distance * 0.001; // Distance en m
 
-        double lat = Math.toRadians(50.16848049999); // Position actuelle latitude radian
-        double lon = Math.toRadians(3.159599299999); // Position actuelle Longétitude radian
+        double lat = Math.toRadians(location.getLatitude()); // Position actuelle latitude radian
+        double lon = Math.toRadians(location.getLongitude()); // Position actuelle Longétitude radian
 
         double lat2 = Math.asin(Math.sin(lat) * Math.cos(d / R) +
                 Math.cos(lat) * Math.sin(d / R) * Math.cos(brng)); // Calcul de la latitude de la balle
@@ -163,7 +188,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                 .position(new LatLng(loc.latitude, loc.longitude))
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                 .title("Vous êtes ici"));
-        Log.e("VALEUR", "Latitude   : " + finalLat + "               longitude    :  " + finalLon);
+        Log.e("MapGoogleGolf", "Latitude   : " + finalLat + "               longitude    :  " + finalLon);
         return loc;
     }
 
@@ -213,29 +238,89 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                     // for ActivityCompat#requestPermissions for more details.
                     return true;
                 }
-                locationManager.removeUpdates(this);
-                locationManager = null;
+                try {
+                    locationManager.removeUpdates(this);
+                    locationManager = null;
+                }catch(Exception e )
+                {
 
-                ((MyApplication) this.getApplication()).setlocationGPS(false);
+                }
 
-               /* Intent objIndent = new Intent(MapGoogleGolf.this,graphMousePos.class);
+                /* Intent objIndent = new Intent(MapGoogleGolf.this,graphMousePos.class);
                 startActivityForResult(objIndent);*/
                 return true;
+            case R.id.shootBall:
+                shootDone=false;
+                Intent secondeActivite = new Intent(MapGoogleGolf.this, MainActivity.class);
+                secondeActivite.putExtra("TypeInterface","test");
+                // On associe l'identifiant à notre intent
+                startActivityForResult(secondeActivite, Ball_distance);
         }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         // On vérifie tout d'abord à quel intent on fait référence ici à l'aide de notre identifiant
-       /* if (requestCode == CHOOSE_BUTTON_REQUEST) {
+       if (requestCode == Ball_distance) {
             // On vérifie aussi que l'opération s'est bien déroulée
             if (resultCode == RESULT_OK) {
                 // On affiche le bouton qui a été choisi
-                Toast.makeText(this, "Vous avez choisi le bouton " + data.getStringExtra(BUTTONS), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "La distance que la balle va parcourir" + data.getStringExtra(distance), Toast.LENGTH_SHORT).show();
+                Log.e("MapGoogleGolf","Distance   " +data.getStringExtra(distance));
+                Log.e("MapGoogleGolf","Direction   " +data.getStringExtra(direction));
+                Location lastBallLocation=new Location("");
+                lastBallLocation.setLatitude(latLngBall.latitude);
+                lastBallLocation.setLongitude(latLngBall.longitude);
+
+                Log.e("MapGoogleGolf","latLngBall  BeforeResult"+ latLngBall.latitude + "     " + latLngBall.longitude);
+                latLngBall = ballPosition(lastBallLocation,Double.parseDouble(data.getStringExtra(distance)),Double.parseDouble(data.getStringExtra(direction)));
+                Log.e("MapGoogleGolf","latLngBall  AfterResult"+ latLngBall.latitude + "     " + latLngBall.longitude);
+
+                mMap.addMarker(new MarkerOptions()
+                        .position(latLngBall)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+
+                CameraPosition camera = new CameraPosition.Builder()
+                        .target(latLngBall)
+                        .zoom(16)
+                        .build();
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera));
+
+                if(distanceBetween2point(latLngBall,latLngHole)<=0.022)
+                {
+                    Log.e("MapGoogleGolf","VIIIIIIIIIIIIIIIIIIIICCCCCTOOOOOOOOOOOOOOOIIIIIIIIRRRRRREEEEEEE");
+                    finish();
+                }
             }
-        }*/
+        }
     }
+    //Fonction calculant la distance etre deux points
+    // Formule haversine
+    // Site test (true)
+    // http://www.sunearthtools.com/fr/tools/distance.php
+    public double distanceBetween2point (LatLng origine,LatLng destination)
+    {
+        double R = 6372.8; // In kilometers
+
+        double lat1 = origine.latitude;
+        double lon1 = origine.longitude;
+        //destination
+        double lat2 = destination.latitude;
+        double lon2 = destination.longitude;
+
+
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+
+        double a = Math.pow(Math.sin(dLat / 2),2) + Math.pow(Math.sin(dLon / 2),2) * Math.cos(lat1) * Math.cos(lat2);
+        double c = 2 * Math.asin(Math.sqrt(a));
+        return R * c;
+    }
+
 
 
 
