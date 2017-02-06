@@ -4,6 +4,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -15,6 +19,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -37,10 +45,31 @@ import java.util.Random;
  * Created by Georges on 16/01/2017.
  */
 
+
+
+
+
+
+//Appel deuxième interface
+    /*
+          shootDone=false;
+                Intent secondeActivite = new Intent(MapGoogleGolf.this, MainActivity.class);
+                secondeActivite.putExtra("TypeInterface","test");
+                // On associe l'identifiant à notre intent
+                startActivityForResult(secondeActivite, Ball_distance);
+     */
+
+
+
+
+
+
 //classe permettant d'afficher une carte (par défaut elle est centré sur l'australie)
-public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallback, LocationListener {
+public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallback, LocationListener,SensorEventListener {
 
-
+    // device sensor manager
+    private static SensorManager sensorService;
+    private Sensor sensorOrientation;
     //Location locationTemp;
     double lat = 0, lng = 0;
     String provider;
@@ -49,6 +78,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
     GoogleMap mMap;
     boolean shootDone=false;
     boolean holeCreated=false;
+    float degree=0;
 
     // L'identifiant de notre requête
     public final static int Ball_distance =0;
@@ -63,6 +93,12 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //----------------------------------------------------------------------------Capteur-----------------------------------------------------------
+        sensorService = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorOrientation = sensorService.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+        //----------------------------------------------------------------------------------------------------------------------------------------------
+
+
 
     }
 
@@ -72,6 +108,38 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
        /* LatLng sydney = new LatLng(-34, 151);
         map.addMarker(new MarkerOptions().position(sydney).title("Marqueur sur Sydney"));
         map.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
+
+        //Bouton permettant la téléportation vers la balle
+        Button btnTP=(Button)findViewById(R.id.btnTp);
+        btnTP.setOnTouchListener(new View.OnTouchListener() {
+                                     public boolean onTouch(View v, MotionEvent event) {
+                                         CameraPosition camera = new CameraPosition.Builder()
+                                                 .target(latLngBall)
+                                                 .zoom(16)
+                                                 .build();
+                                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera));
+
+                                         if (ActivityCompat.checkSelfPermission(MapGoogleGolf.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapGoogleGolf.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                             // TODO: Consider calling
+                                             //    ActivityCompat#requestPermissions
+                                             // here to request the missing permissions, and then overriding
+                                             //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                             //                                          int[] grantResults)
+                                             // to handle the case where the user grants the permission. See the documentation
+                                             // for ActivityCompat#requestPermissions for more details.
+                                             return true;
+                                         }
+                                         try {
+                                             locationManager.removeUpdates(MapGoogleGolf.this);
+                                             locationManager = null;
+                                         }catch(Exception e )
+                                         {
+
+                                         }
+                                            return true;
+                                     }
+                                 });
+
 
 
         mMap = map;
@@ -98,16 +166,19 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
             // Creating a criteria object to retrieve provider
             Criteria criteria = new Criteria();
             criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+
             // Getting the name of the best provider
             String provider = locationManager.getBestProvider(criteria, true);
 
             // Getting Current Location
             Location locationTemp = locationManager.getLastKnownLocation(provider);
 
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, this);
 
 
-            Log.e("MapGoogleGolf", "POS GOOGLE LATITUDE : " + locationTemp.getLatitude() + "POS THOERIQUE : " + 50.166689 + " ||     POS GOOGLE LONGETITUDE : " + locationTemp.getLongitude() + "  POS THEORIQUE : " + 3.159122000000025 + "    ||||||||      " + locationTemp.getAccuracy());
+
+
+            //Log.e("MapGoogleGolf", "POS GOOGLE LATITUDE : " + locationTemp.getLatitude() + "POS THOERIQUE : " + 50.166689 + " ||     POS GOOGLE LONGETITUDE : " + locationTemp.getLongitude() + "  POS THEORIQUE : " + 3.159122000000025 + "    ||||||||      " + locationTemp.getAccuracy());
 
 
 
@@ -142,12 +213,11 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
                 holeCreated=true;
             }
-
+            updateCameraBearing(mMap, degree);
         }
-        Log.e("MapGoogleGolf","PositionChange  "+ location.getLatitude() + "     " + location.getLongitude() + "       " + location.getAccuracy());
+
+        Log.e("MapGoogleGolf","PositionChange  "+ location.getLatitude() + "     " + location.getLongitude() + "       " + location.getAccuracy()+"  "+location.getBearing());
         Log.e("MapGoogleGolf","latLngBall  "+ latLngBall.latitude + "     " + latLngBall.longitude);
-
-
     }
 
 
@@ -207,57 +277,21 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
         Log.e("PROVIDER DISABLE", "PRovider disable");
     }
 
-
-    private Menu m = null;
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menuoption, menu);
-        m = menu;
-        return true;
+    private void updateCameraBearing(GoogleMap googleMap, float bearing) {
+        if ( googleMap == null) return;
+        CameraPosition camPos = CameraPosition
+                .builder(
+                        googleMap.getCameraPosition() // current Camera
+                )
+                .zoom(16)
+                .target(latLngBall)
+                .bearing(bearing)
+                .build();
+        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos));
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.tpBall:
-                CameraPosition camera = new CameraPosition.Builder()
-                        .target(latLngBall)
-                        .zoom(16)
-                        .build();
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camera));
 
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return true;
-                }
-                try {
-                    locationManager.removeUpdates(this);
-                    locationManager = null;
-                }catch(Exception e )
-                {
 
-                }
-
-                /* Intent objIndent = new Intent(MapGoogleGolf.this,graphMousePos.class);
-                startActivityForResult(objIndent);*/
-                return true;
-            case R.id.shootBall:
-                shootDone=false;
-                Intent secondeActivite = new Intent(MapGoogleGolf.this, MainActivity.class);
-                secondeActivite.putExtra("TypeInterface","test");
-                // On associe l'identifiant à notre intent
-                startActivityForResult(secondeActivite, Ball_distance);
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -322,8 +356,23 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
     }
 
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (sensorOrientation != null) {
+            sensorService.registerListener(this, sensorOrientation, SensorManager.SENSOR_DELAY_FASTEST);
+        } else {
+            Toast.makeText(MapGoogleGolf.this, "Not supported", Toast.LENGTH_LONG).show();
+        }
+    }
 
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+         degree = Math.round(event.values[0]);
+    }
 
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-
+    }
 }
