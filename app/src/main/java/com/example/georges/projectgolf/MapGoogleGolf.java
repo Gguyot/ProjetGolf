@@ -102,6 +102,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
             String provider = locationManager.getBestProvider(criteria, true);
 
             // Getting Current Location
+            // Gérer cette exception proprement (try/catch)
             Location locationTemp = locationManager.getLastKnownLocation(provider);
 
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
