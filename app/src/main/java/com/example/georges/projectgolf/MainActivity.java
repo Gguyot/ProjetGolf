@@ -38,12 +38,11 @@ public class MainActivity extends Activity implements SensorEventListener {
     private static SensorManager sensorService;
     private Sensor sensorOrientation;
 
-
-
+    Intent intentMap;
 
 
     private static double floatBearing = 0;
-   // ----------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +59,13 @@ public class MainActivity extends Activity implements SensorEventListener {
         ibStrong.setColorFilter(Color.GREEN);
         tvChoose.setText("Puissance forte");
         tvXY.setText("Veuillez faire un mouvement sur votre écran");
+
+        TextView tvHeading = (TextView) findViewById(R.id.tvOrientation);
+
+
+        intentMap = getIntent();
+        String message = "Direction : " + intentMap.getFloatExtra("direction", 0);
+        tvHeading.setText(message);
 
         ibStrong.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
@@ -84,6 +90,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         sensorService = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorOrientation = sensorService.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         //----------------------------------------------------------------------------------------------------------------------------------------------
+
 
         //lancement du service gps
         // Intent servIntent = new Intent(this, ServiceGPS.class);
@@ -130,13 +137,10 @@ public class MainActivity extends Activity implements SensorEventListener {
                             //calcul distance entre deux points racine racine((xB-xA)³+(yB-yA)²)
                             calDistance = Math.sqrt(Math.pow((currentEvent.getMouseX() - previousEvent.getMouseX()), 2.0) + Math.pow((currentEvent.getMouseY() - previousEvent.getMouseY()), 2.0));
 
-                            //calcul de la vitesse courante entre deux points (PIXEL/MS)
-                            //sumSpeed+=(calDistance/(currentEvent.getEventDate()-previousEvent.getEventDate()));
-
                             //tentative M/S
                             sumSpeed += ((calDistance * 0.000265) / ((currentEvent.getEventDate() - previousEvent.getEventDate()) * 0.001));
 
-                            /*INFO :
+                            /**INFO :
                             https://www.unitjuggler.com/convertir-time-de-ms-en-s.html?val=125
                             Relation de base : 1 ms = 0.001 sec.
 
@@ -145,10 +149,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
                            https://www.ilemaths.net/sujet-comment-passer-de-m-s-en-km-h-37126.html
                            m/s * 3.6 = km/h            */
-
-                            //Log d'affichage de différent paramètre
-                            //Log.e("DISTANCE A=>B",previousEvent.getEventId()+" ===> "+currentEvent.getEventId()+"        Val   "+calDistance);   Affichage de la distance entre deux point à la suite dans la liste
-                            //Log.i("Val Boucle(t-1)(t)","previous  : "+previousEvent.getEventId()+"       current  : "+currentEvent.getEventId());       Affichage  des objets vérification
                         }
 
 
@@ -157,12 +157,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                         avgSpeed = (sumSpeed / (list.size() - 1)) * powerShoot;
                         message = "Moyenne de la vitesse  \n:" + avgSpeed + "   m/s";
 
-                        //Calcul de la distance qu'aura parcouru la balle
-                        //Source
-                        //Simulateur
-                        //https://www.edumedia-sciences.com/fr/media/660-chute-libre-parabolique
-                        //Calcul
-                        //http://www.reviz.fr/terminale/physique/applications-lois-dynamique/mouvement-parabolique-chute-libre.html
+                        /**Calcul de la distance qu'aura parcouru la balle
+                         Source
+                         Simulateur
+                         https://www.edumedia-sciences.com/fr/media/660-chute-libre-parabolique
+                         Calcul
+                         http://www.reviz.fr/terminale/physique/applications-lois-dynamique/mouvement-parabolique-chute-libre.html **/
                         double distanceball = 0;
                         distanceball = (Math.pow(avgSpeed, 2.0) * Math.sin(2 * 45) / 9.81);
 
@@ -171,27 +171,11 @@ public class MainActivity extends Activity implements SensorEventListener {
 
                         Log.e("MainActivity", "Distance  " + Double.toString(distanceball));
                         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                        try {
-                            Intent result = getIntent();
-                            if (!result.getStringExtra("TypeInterface").isEmpty()) {
-                                result.putExtra(MapGoogleGolf.distance, Double.toString(distanceball));
-                                result.putExtra(MapGoogleGolf.direction, Double.toString(direction));
-                                setResult(RESULT_OK, result);
-                                finish();
-                            }
-                            return true;
 
-                        } catch (Exception e) {
-                            //Appel à l'interface possèdant le graph à afficher avec comme paramètre la liste des coordonnées
-                            Intent objIndent = new Intent(MainActivity.this, MapGoogleGolf.class);
-                            objIndent.putExtra("Distance", distanceball);
-
-                            startActivity(objIndent);
-
-
-                            // e.printStackTrace();
-                            return false;
-                        }
+                        intentMap.putExtra(MapGoogleGolf.distance, Double.toString(distanceball));
+                        intentMap.putExtra(MapGoogleGolf.direction, Double.toString(direction));
+                        setResult(RESULT_OK, intentMap);
+                        finish();
 
 
                     case MotionEvent.ACTION_MOVE:
@@ -237,12 +221,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        float degree = Math.round(event.values[0]);
-        TextView tvHeading = (TextView) findViewById(R.id.tvOrientation);
-
-        direction = degree;
-
-        tvHeading.setText(Float.toString(degree) + " degrees  ");
     }
 
     @Override
