@@ -68,17 +68,18 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
     double lat = 0, lng = 0;
     String provider;
     LocationManager locationManager;
-    LatLng latLngBall, latLngHole,latLngPlayer;
+    LatLng latLngBall, latLngHole, latLngPlayer;
     GoogleMap mMap;
     boolean shootDone = false;
     boolean holeCreated = false;
-    boolean zoomDone =false;
-    boolean shootEnable=false;
-    boolean tpActivate=false;
+    boolean zoomDone = false;
+    boolean shootEnable = false;
+    boolean tpActivate = false;
     float degree = 0;
+    boolean bRandomPosition = true;
 
-    ArrayList<Marker> listMarker=new ArrayList<Marker>();
-    Marker markerHole,markerBall;
+    ArrayList<Marker> listMarker = new ArrayList<Marker>();
+    Marker markerHole, markerBall;
 
     Button btnShoot;
     Button btnTP;
@@ -92,6 +93,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
     // L'identifiant de la chaîne de caractères qui contient le résultat de l'intent
     public final static String distance = "MapCall";
     public final static String direction = "MapCallV2";
+    public final static String position = "MapCallV3";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,17 +107,19 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
         sensorService = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorOrientation = sensorService.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         //----------------------------------------------------------------------------------------------------------------------------------------------
-        tvDistance=(TextView)findViewById(R.id.tvDistance);
+        tvDistance = (TextView) findViewById(R.id.tvDistance);
     }
 
     @Override
     public void onMapReady(GoogleMap map) {
+        mMap = map;
         //Bouton permettant la téléportation vers la balle
         btnTP = (Button) findViewById(R.id.btnTp);
         btnTP.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
 
-                tpActivate=true;
+                tpActivate = true;
+                btnShoot.setVisibility(View.VISIBLE);
               /*  if (ActivityCompat.checkSelfPermission(MapGoogleGolf.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapGoogleGolf.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     // TODO: Consider calling
                     //    ActivityCompat#requestPermissions
@@ -161,29 +165,49 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                 final int action = event.getAction();
                 switch (action) {
                     case MotionEvent.ACTION_UP:
-                        if (listMarker.size()==1)
-                        {
-                           listMarker.get(0).remove();
+                        if (listMarker.size() == 1) {
+                            listMarker.get(0).remove();
                             btnShoot.setVisibility(View.VISIBLE);
-                        }else
-                        {
-                            LatLng test=new LatLng(50.0,5.0);
-                            latLngBall=new LatLng(listMarker.get(listMarker.size()-2).getPosition().latitude,listMarker.get(listMarker.size()-2).getPosition().longitude);
-                            listMarker.get(listMarker.size()-1).setPosition(test);
-                            Log.e("MapGoogleGolf"," MARQUEUR " +listMarker.get(listMarker.size()-1).getSnippet()+"    "+listMarker.get(listMarker.size()-1).getId());
-                            listMarker.remove(listMarker.size()-1);
+                            tvDistance.setText("");
+                        } else {
+                            LatLng test = new LatLng(50.0, 5.0);
+                            latLngBall = new LatLng(listMarker.get(listMarker.size() - 2).getPosition().latitude, listMarker.get(listMarker.size() - 2).getPosition().longitude);
+                            listMarker.get(listMarker.size() - 1).setPosition(test);
+                            Log.e("MapGoogleGolf", " MARQUEUR " + listMarker.get(listMarker.size() - 1).getSnippet() + "    " + listMarker.get(listMarker.size() - 1).getId());
+                            listMarker.remove(listMarker.size() - 1);
+
+                            Double message = 1000 * distanceBetween2point(latLngBall, latLngHole);
+                            tvDistance.setText(String.format("%.2f", message) + "  m");
                         }
                 }
                 return true;
             }
         });
 
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+
+            @Override
+            public void onMapClick(LatLng point) {
+                // TODO Auto-generated method stub
+                if (bRandomPosition == false && holeCreated == false) {
+                    mMap.addMarker(new MarkerOptions()
+                            .position(point)
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+
+                    );
+                    latLngHole = point;
+                    holeCreated = true;
+                }
+            }
+        });
+
+
         //Définition de la visibilité des boutons situation initiale
         btnShoot.setVisibility(View.GONE);
         btnTP.setVisibility(View.GONE);
         btnRetry.setVisibility(View.GONE);
 
-        mMap = map;
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -202,6 +226,15 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
         // Getting LocationManager object from System Service LOCATION_SERVICE
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+
+        //Code permettant de demander à l'utilisateur d'autorisé le gps
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Toast.makeText(this, "Veuillez activé votre gps", Toast.LENGTH_LONG).show();
+            Intent i = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+
+            startActivityForResult(i, 1);
+        }
+
         // Creating a criteria object to retrieve provider
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_COARSE);
@@ -215,7 +248,10 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, this);
 
-
+        Intent iPositionHole = new Intent(MapGoogleGolf.this, ChoicePositionHole.class);
+        iPositionHole.putExtra("choice", bRandomPosition);
+        // On associe l'identifiant à notre intent
+        startActivityForResult(iPositionHole, 3);
         //Log.e("MapGoogleGolf", "POS GOOGLE LATITUDE : " + locationTemp.getLatitude() + "POS THOERIQUE : " + 50.166689 + " ||     POS GOOGLE LONGETITUDE : " + locationTemp.getLongitude() + "  POS THEORIQUE : " + 3.159122000000025 + "    ||||||||      " + locationTemp.getAccuracy());
 
 
@@ -224,14 +260,14 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.e("MapGoogleGolf","Tpactivate  "+tpActivate);
+        Log.e("MapGoogleGolf", "Tpactivate  " + tpActivate);
 
         // Getting Current Location
-        if (location.getAccuracy() < 100 ) {
-            latLngPlayer=new LatLng(location.getLatitude(),location.getLongitude());
+        if (location.getAccuracy() < 100) {
+            latLngPlayer = new LatLng(location.getLatitude(), location.getLongitude());
 
 
-            if (holeCreated == false) {
+            if (holeCreated == false && bRandomPosition == true) {
                 Random rand = new Random();
                 float randomDirection = rand.nextInt(360 - 0 + 1) + 0;
                 double randomDistance = rand.nextInt(900 - 200 + 1) + 200;
@@ -242,47 +278,38 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                 latLngHole = holePosition;
 
 
-
-                latLngBall=new LatLng(location.getLatitude(),location.getLongitude());
+                latLngBall = new LatLng(location.getLatitude(), location.getLongitude());
                 btnShoot.setVisibility(View.VISIBLE);
                 holeCreated = true;
             }
+            if (bRandomPosition == false && holeCreated == false)
+                latLngBall = new LatLng(location.getLatitude(), location.getLongitude());
 
 
+            if (tpActivate == false) {
+                updateCameraBearing(mMap, degree, latLngPlayer, 16);
 
-
-            if (tpActivate==false)
-            {
-                updateCameraBearing(mMap, degree,latLngPlayer,16);
-
-                if(distanceBetween2point(latLngPlayer, latLngBall) <= 0.022)
-                {
+                if (distanceBetween2point(latLngPlayer, latLngBall) <= 0.022 && holeCreated==true) {
                     btnShoot.setVisibility(View.VISIBLE);
-                    tpActivate=true;
-
+                    tpActivate = true;
                 }
-            }else
-            {
-                if(listMarker.size()==0)
-                {
-                    updateCameraBearing(mMap, degree,latLngPlayer,16);
-                }else
-                {
-                    updateCameraBearing(mMap, degree,latLngBall,16);
+            } else {
+                if (listMarker.size() == 0) {
+                    updateCameraBearing(mMap, degree, latLngPlayer, 16);
+                } else {
+                    updateCameraBearing(mMap, degree, latLngBall, 16);
                 }
 
-                btnShoot.setVisibility(View.VISIBLE);
+
+
+
+                Log.e("MapGoogleGolf", "Player Position  " + latLngPlayer.latitude + "     " + latLngPlayer.longitude + "       " + location.getAccuracy());
+                Log.e("MapGoogleGolf", "Ball Position  " + latLngBall.latitude + "     " + latLngBall.longitude);
             }
-
-            Log.e("MapGoogleGolf", "Player Position  " +latLngPlayer.latitude  + "     " + latLngPlayer.longitude + "       " + location.getAccuracy());
-            Log.e("MapGoogleGolf", "Ball Position  " +latLngBall.latitude  + "     " + latLngBall.longitude  );
         }
 
 
-
     }
-
-
 
 
     @Override
@@ -315,12 +342,10 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                 Log.e("MapGoogleGolf", "Direction   " + data.getStringExtra(direction));
                 Location lastBallLocation = new Location("");
 
-                if(tpActivate=true && listMarker.size()>0)
-                {
+                if (tpActivate = true && listMarker.size() > 0) {
                     lastBallLocation.setLatitude(latLngBall.latitude);
                     lastBallLocation.setLongitude(latLngBall.longitude);
-                }else
-                {
+                } else {
                     lastBallLocation.setLatitude(latLngPlayer.latitude);
                     lastBallLocation.setLongitude(latLngPlayer.longitude);
                 }
@@ -330,14 +355,15 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                 latLngBall = ballPosition(lastBallLocation, Double.parseDouble(data.getStringExtra(distance)), degree);
                 Log.e("MapGoogleGolf", "latLngBall  AfterResult" + latLngBall.latitude + "     " + latLngBall.longitude);
 
-                markerBall=mMap.addMarker(new MarkerOptions()
+
+                markerBall = mMap.addMarker(new MarkerOptions()
                         .position(latLngBall)
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
-               Log.e("MapGoogleGolf", markerBall.getId());
+                Log.e("MapGoogleGolf", markerBall.getId());
                 listMarker.add(markerBall);
 
-               Double message=1000*distanceBetween2point(latLngBall,latLngHole);
-                tvDistance.setText(String.format( "%.2f", message )+"  m");
+                Double message = 1000 * distanceBetween2point(latLngBall, latLngHole);
+                tvDistance.setText(String.format("%.2f", message) + "  m");
                 if (distanceBetween2point(latLngBall, latLngHole) <= 0.022) {
                     Log.e("MapGoogleGolf", "VIIIIIIIIIIIIIIIIIIIICCCCCTOOOOOOOOOOOOOOOIIIIIIIIRRRRRREEEEEEE");
                     Toast.makeText(this, "Bravo vous avez fini le parcours", Toast.LENGTH_SHORT).show();
@@ -346,8 +372,19 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
             }
             btnRetry.setVisibility(View.VISIBLE);
             btnShoot.setVisibility(View.INVISIBLE);
-            tpActivate=false;
+            tpActivate = false;
         }
+        if (requestCode == 1) {
+            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                Toast.makeText(this, "L'application ne peut pas fonctionner sans gps", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
+        if (requestCode == 3) {
+            Toast.makeText(this, "choix" + data.getBooleanExtra(position, true), Toast.LENGTH_SHORT).show();
+            bRandomPosition = data.getBooleanExtra(position, true);
+        }
+
     }
 
     //Fonction calculant la distance etre deux points
@@ -373,6 +410,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
         double c = 2 * Math.asin(Math.sqrt(a));
         return R * c;
     }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -382,6 +420,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
             Toast.makeText(MapGoogleGolf.this, "Not supported", Toast.LENGTH_LONG).show();
         }
     }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
         degree = Math.round(event.values[0]);
@@ -392,18 +431,19 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
     }
 
-    /**Fonction permettant d'afficher la position de la balle  sur la carte
-     A partir des données :
-     - position du tireur
-     - distance de parcours
-     MODIFICATION à ajouter
-     - Choisir la distance (par défaut 45°)
-     - Utiliser la distance récupéré (actuellement la distance est en dur)
-     SOURCE
-     - Formule
-     # http://www.movable-type.co.uk/scripts/latlong.html
-     - Site permettant de vérifier les test
-     # http://www.geomidpoint.com/destination/
+    /**
+     * Fonction permettant d'afficher la position de la balle  sur la carte
+     * A partir des données :
+     * - position du tireur
+     * - distance de parcours
+     * MODIFICATION à ajouter
+     * - Choisir la distance (par défaut 45°)
+     * - Utiliser la distance récupéré (actuellement la distance est en dur)
+     * SOURCE
+     * - Formule
+     * # http://www.movable-type.co.uk/scripts/latlong.html
+     * - Site permettant de vérifier les test
+     * # http://www.geomidpoint.com/destination/
      **/
     public LatLng ballPosition(Location location, Double distance, float direction) {
         Log.e("MapGoogleGolf", "DIRECTION FONCTION   : " + direction);
@@ -434,7 +474,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
     }
 
     //Fonction permettant de mettre a jour la direction de la googlemap par rapport a la direction du téléphone
-    private void updateCameraBearing(GoogleMap googleMap, float bearing,LatLng position,float zoom) {
+    private void updateCameraBearing(GoogleMap googleMap, float bearing, LatLng position, float zoom) {
 
         if (googleMap == null) return;
         CameraPosition camPos = CameraPosition

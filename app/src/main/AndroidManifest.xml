@@ -35,6 +35,10 @@
         <activity android:name=".graphMousePos">
 
         </activity>
+        <activity android:name=".ChoicePositionHole"
+            android:label="Choix de la position du trou"
+            android:theme="@android:style/Theme.Dialog">
+        </activity>
         <activity android:name=".MapGoogleGolf"
             android:screenOrientation="portrait">
             <intent-filter>
