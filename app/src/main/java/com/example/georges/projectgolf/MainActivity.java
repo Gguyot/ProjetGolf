@@ -162,7 +162,8 @@ public class MainActivity extends Activity implements SensorEventListener {
                          Simulateur
                          https://www.edumedia-sciences.com/fr/media/660-chute-libre-parabolique
                          Calcul
-                         http://www.reviz.fr/terminale/physique/applications-lois-dynamique/mouvement-parabolique-chute-libre.html **/
+                         http://www.reviz.fr/terminale/physique/applications-lois-dynamique/mouvement-parabolique-chute-libre.html
+                         **/
                         double distanceball = 0;
                         distanceball = (Math.pow(avgSpeed, 2.0) * Math.sin(2 * 45) / 9.81);
 

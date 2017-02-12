@@ -203,9 +203,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
 
         //Définition de la visibilité des boutons situation initiale
-        btnShoot.setVisibility(View.GONE);
-        btnTP.setVisibility(View.GONE);
-        btnRetry.setVisibility(View.GONE);
+
 
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -254,7 +252,9 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
         startActivityForResult(iPositionHole, 3);
         //Log.e("MapGoogleGolf", "POS GOOGLE LATITUDE : " + locationTemp.getLatitude() + "POS THOERIQUE : " + 50.166689 + " ||     POS GOOGLE LONGETITUDE : " + locationTemp.getLongitude() + "  POS THEORIQUE : " + 3.159122000000025 + "    ||||||||      " + locationTemp.getAccuracy());
 
-
+        btnShoot.setVisibility(View.GONE);
+        btnTP.setVisibility(View.GONE);
+        btnRetry.setVisibility(View.GONE);
     }
 
 
@@ -329,13 +329,14 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        btnTP.setVisibility(View.VISIBLE);
-        btnShoot.setVisibility(View.VISIBLE);
+
         //btnRetry.setVisibility(View.VISIBLE);
         // On vérifie tout d'abord à quel intent on fait référence ici à l'aide de notre identifiant
         if (requestCode == Ball_distance) {
             // On vérifie aussi que l'opération s'est bien déroulée
             if (resultCode == RESULT_OK) {
+                btnTP.setVisibility(View.VISIBLE);
+                btnShoot.setVisibility(View.VISIBLE);
                 // On affiche le bouton qui a été choisi
                 Toast.makeText(this, "La distance que la balle va parcourir" + data.getStringExtra(distance), Toast.LENGTH_SHORT).show();
                 Log.e("MapGoogleGolf", "Distance   " + data.getStringExtra(distance));
@@ -381,8 +382,14 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
             }
         }
         if (requestCode == 3) {
-            Toast.makeText(this, "choix" + data.getBooleanExtra(position, true), Toast.LENGTH_SHORT).show();
-            bRandomPosition = data.getBooleanExtra(position, true);
+            //Toast.makeText(this, "choix" + data.getBooleanExtra(position, true), Toast.LENGTH_SHORT).show();
+            if (resultCode == RESULT_OK) {
+                bRandomPosition = data.getBooleanExtra(position, true);
+            }else
+            {
+                bRandomPosition=true;
+            }
+
         }
 
     }

@@ -32,7 +32,7 @@
 
         <activity android:name=".MainActivity">
         </activity>
-        <activity android:name=".graphMousePos">
+        <activity android:name=".save.graphMousePos">
 
         </activity>
         <activity android:name=".ChoicePositionHole"
