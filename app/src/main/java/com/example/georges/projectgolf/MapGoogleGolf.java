@@ -15,8 +15,16 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,6 +32,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,9 +66,8 @@ import java.util.Random;
                 startActivityForResult(secondeActivite, Ball_distance);
      */
 
-
 //classe permettant d'afficher une carte (par défaut elle est centré sur l'australie)
-public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallback, LocationListener, SensorEventListener {
+public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallback, LocationListener, SensorEventListener,NavigationView.OnNavigationItemSelectedListener {
 
     // device sensor manager
     private static SensorManager sensorService;
@@ -87,6 +95,8 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
     TextView tvDistance;
 
+    ProgressBar pbLoading;
+
 
     // L'identifiant de notre requête
     public final static int Ball_distance = 0;
@@ -108,7 +118,48 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
         sensorOrientation = sensorService.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         //----------------------------------------------------------------------------------------------------------------------------------------------
         tvDistance = (TextView) findViewById(R.id.tvDistance);
+        //----------------------------------------------------------------------------------------------------------------------------------------------
+        pbLoading = (ProgressBar) findViewById(R.id.pbLoading);
+
+
+        //------------------------------------------------MENU----------------------------------------------------------------------------------
+
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        //---------------------------------------------------------------------------------------------------------------------------------
+
     }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        // Handle navigation view item clicks here.
+        int id = menuItem.getItemId();
+
+        if (id == R.id.nav_camera) {
+            // Handle the camera action
+        } else if (id == R.id.nav_gallery) {
+
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+
+        return super.onOptionsItemSelected(item);
+    }
+
 
     @Override
     public void onMapReady(GoogleMap map) {
@@ -120,22 +171,6 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
                 tpActivate = true;
                 btnShoot.setVisibility(View.VISIBLE);
-              /*  if (ActivityCompat.checkSelfPermission(MapGoogleGolf.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapGoogleGolf.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return true;
-                }
-                try {
-                    locationManager.removeUpdates(MapGoogleGolf.this);
-                    locationManager = null;
-                } catch (Exception e) {
-
-                }*/
                 return true;
             }
         });
@@ -170,11 +205,25 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                             btnShoot.setVisibility(View.VISIBLE);
                             tvDistance.setText("");
                         } else {
-                            LatLng test = new LatLng(50.0, 5.0);
+
                             latLngBall = new LatLng(listMarker.get(listMarker.size() - 2).getPosition().latitude, listMarker.get(listMarker.size() - 2).getPosition().longitude);
-                            listMarker.get(listMarker.size() - 1).setPosition(test);
-                            Log.e("MapGoogleGolf", " MARQUEUR " + listMarker.get(listMarker.size() - 1).getSnippet() + "    " + listMarker.get(listMarker.size() - 1).getId());
+                            Log.e("MapGoogleGolf", " MARQUEUR " + listMarker.get(listMarker.size() - 1).getId());
+                            listMarker.get(listMarker.size() - 1).remove();
                             listMarker.remove(listMarker.size() - 1);
+
+                            mMap.clear();
+                            //Définition des markers
+                            for (int i = 0; i < listMarker.size(); i++) {
+
+                                mMap.addMarker(new MarkerOptions()
+                                        .position(new LatLng(listMarker.get(i).getPosition().latitude, listMarker.get(i).getPosition().longitude))
+                                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                                        .title("Tir " + i));
+                            }
+                            mMap.addMarker(new MarkerOptions()
+                                    .position(new LatLng(latLngHole.latitude, latLngHole.longitude))
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                                    .title("trou"));
 
                             Double message = 1000 * distanceBetween2point(latLngBall, latLngHole);
                             tvDistance.setText(String.format("%.2f", message) + "  m");
@@ -203,7 +252,6 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
 
         //Définition de la visibilité des boutons situation initiale
-
 
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -264,6 +312,8 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
 
         // Getting Current Location
         if (location.getAccuracy() < 100) {
+            pbLoading.setVisibility(View.GONE);
+
             latLngPlayer = new LatLng(location.getLatitude(), location.getLongitude());
 
 
@@ -289,7 +339,7 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
             if (tpActivate == false) {
                 updateCameraBearing(mMap, degree, latLngPlayer, 16);
 
-                if (distanceBetween2point(latLngPlayer, latLngBall) <= 0.022 && holeCreated==true) {
+                if (distanceBetween2point(latLngPlayer, latLngBall) <= 0.022 && holeCreated == true) {
                     btnShoot.setVisibility(View.VISIBLE);
                     tpActivate = true;
                 }
@@ -299,13 +349,11 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                 } else {
                     updateCameraBearing(mMap, degree, latLngBall, 16);
                 }
-
-
-
-
                 Log.e("MapGoogleGolf", "Player Position  " + latLngPlayer.latitude + "     " + latLngPlayer.longitude + "       " + location.getAccuracy());
                 Log.e("MapGoogleGolf", "Ball Position  " + latLngBall.latitude + "     " + latLngBall.longitude);
             }
+        } else {
+            pbLoading.setVisibility(View.VISIBLE);
         }
 
 
@@ -385,9 +433,8 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
             //Toast.makeText(this, "choix" + data.getBooleanExtra(position, true), Toast.LENGTH_SHORT).show();
             if (resultCode == RESULT_OK) {
                 bRandomPosition = data.getBooleanExtra(position, true);
-            }else
-            {
-                bRandomPosition=true;
+            } else {
+                bRandomPosition = true;
             }
 
         }
@@ -490,8 +537,23 @@ public class MapGoogleGolf extends FragmentActivity implements OnMapReadyCallbac
                 )
                 .zoom(zoom)
                 .target(position)
+                //.tilt(60)
                 .bearing(bearing)
                 .build();
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos));
     }
+
+    public void onBackPressed() {
+        //
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+
+        }
+    }
+
+
+
+
 }
